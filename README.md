@@ -12,5 +12,8 @@ Therefore, as I am also learning my way through .NET Core and Visual Studio
 Code, I thought it would be nice to port those examples to .NET Core and
 package them in a repo that makes it easy to run them.
 
+**NOTE**: I am not the author of the examples. I am just repackaging the existing
+samples to make sure they work under .NET Core and Visual Studio Code.
+
 TODO: add instructions to execute each example for each platform (Windows,
 Linux).
