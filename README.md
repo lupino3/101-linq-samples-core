@@ -13,7 +13,22 @@ Code, I thought it would be nice to port those examples to .NET Core and
 package them in a repo that makes it easy to run them.
 
 **NOTE**: I am not the author of the examples. I am just repackaging the existing
-samples to make sure they work under .NET Core and Visual Studio Code.
+samples to make sure they work under .NET Core and Visual Studio Code and
+changing them as little as possible to make them work.
+
+# Changes
+
+The `.cs` files are the original files from the MSDN site. The changes can be found
+in those files by looking for the `--- CHANGE ---` marker in comments.
+
+All the `.csproj` files have been generated from scratch with the `dotnet` CLI.
+
+Here is a high-level summary of changes to the `.cs` files:
+
+  * the `customers.xml` file is embedded into each project as an `EmbeddedResource`;
+  * all sample methods are executed rather than just some of them.
+
+# How to run the examples
 
 TODO: add instructions to execute each example for each platform (Windows,
 Linux).
