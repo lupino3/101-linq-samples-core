@@ -11,14 +11,6 @@ try {
     exit
 }
 
-# Check for availability of Visual Studio Code. This could be made optional.
-try {
-    $_  = Get-Command code -ErrorAction stop
-} catch {
-    Write-Error "Visual Studio Code is not installed or not reachable through PATH."
-    exit
-}
-
 function MigrateProject($srcProject, [string]$dstDir, [string]$workspacePath) {
     $dstProjectDir = Join-Path $dstDir $srcProject.project
     if (Test-Path $dstProjectDir) {
