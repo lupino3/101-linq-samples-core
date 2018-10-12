@@ -43,6 +43,10 @@ The manual changes could have been automated into the `convert-samples.ps1` scri
 but at that point it was just simpler to do the changes manually rather than
 change and test the script again.
 
+During the manual inspection, all projects were opened in Visual Studio Code, and
+the required files for building and executing the samples
+(`.vscode/{launch,tasks}.json`) were created automatically by the C# extension.
+
 ## How to run the examples
 
 TODO: add instructions to execute each example for each platform (Windows,

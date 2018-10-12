@@ -1,4 +1,3 @@
 # Ignore subdirectories created by VSCode.
 bin/
 obj/
-.vscode/
