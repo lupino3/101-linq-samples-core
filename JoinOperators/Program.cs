@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Xml.Linq;
 using System.ComponentModel;
+using System.Xml.Linq;
 
-namespace AggregateOperators
+namespace JoinOperators
 {
     class Program
     {
@@ -15,37 +15,29 @@ namespace AggregateOperators
 
             //Comment or uncomment the method calls below to run or not
 
-            samples.Linq73(); // This sample uses Count to get the number of unique prime factors of 300
-            samples.Linq74(); // This sample uses Count to get the number of odd ints in the array
-            samples.Linq76(); // This sample uses Count to return a list of customers and how many orders each has
+            samples.Linq102(); // This sample shows how to perform a simple inner equijoin of two sequences to produce 
+                               // a flat  result set  that consists  of each  element in suppliers that has a matching 
+                               // element in customers
 
-            samples.Linq77(); // This sample uses Count to return a list of categories and how many products each has
-            samples.Linq78(); // This sample uses Sum to add all the numbers in an array
-            samples.Linq79(); // This sample uses Sum to get the total number of characters of all words in the array
+            samples.Linq103(); // A group join produces a hierarchical sequence.  The following query is an inner join 
+                               // that produces a sequence of objects, each of which has a key and an inner sequence of 
+                               // all matching elements
 
-            samples.Linq80(); // This sample uses Sum to get the total units in stock for each product category
-            samples.Linq81(); // This sample uses Min to get the lowest number in an array
-            samples.Linq82(); // This sample uses Min to get the length of the shortest word in an array
+            samples.Linq104(); // The group join operator is more general than join, as this slightly more verbose 
+                               // version of the cross join sample shows
 
-            samples.Linq83(); // This sample uses Min to get the cheapest price among each category's products
-            samples.Linq84(); // This sample uses Min to get the products with the lowest price in each category
+            samples.Linq105(); // For each customer in the table of customers, this query returns all the suppliers from 
+                               // that same country,  or else a string  indicating  that no suppliers  from that country 
+                               // were found
 
-            samples.Linq85(); // This sample uses Max to get the highest number in an array. Note that the method 
-                              // returns a single value
+            samples.Linq106(); // For each customer in the table of customers, this query returns all the suppliers from 
+                               // that same country,  or else a string  indicating  that no suppliers  from that country 
+                               // were found
 
-            samples.Linq86(); // This sample uses Max to get the length of the longest word in an array
-            samples.Linq87(); // This sample uses Max to get the most expensive price among each category's products
-            samples.Linq88(); // This sample uses Max to get the products with the most expensive price in each category
-
-            samples.Linq89(); // This sample uses Average to get the average of all numbers in an array
-            samples.Linq90(); // This sample uses Average to get the average length of the words in the array
-            samples.Linq91(); // This sample uses Average to get the average price of each category's products
-
-            samples.Linq92(); // This sample uses Aggregate to create a running product on the array that calculates 
-                              // the total product of all elements
-
-            samples.Linq93(); // This sample uses Aggregate to create a running account balance that subtracts each 
-                              // withdrawal from the initial balance of 100, as long as the balance never drops below 0
+            samples.Linq107(); // For each supplier in the table of suppliers, this query returns all the customers from 
+                               // the same city and country,  or else a string  indicating  that no customers  from that 
+                               // city/country were found.  Note the use of anonymous  types to encapsulate the multiple 
+                               // key values
         }
 
         public class Product
@@ -62,6 +54,14 @@ namespace AggregateOperators
             public int OrderID { get; set; }
             public DateTime OrderDate { get; set; }
             public decimal Total { get; set; }
+        }
+
+        public class Supplier
+        {
+            public string SupplierName { get; set; }
+            public string Address { get; set; }
+            public string City { get; set; }
+            public string Country { get; set; }
         }
 
         public class Customer
@@ -82,272 +82,159 @@ namespace AggregateOperators
         {
             private List<Product> productList;
             private List<Customer> customerList;
+            private List<Supplier> supplierList;
 
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Count to get the number of unique prime factors of 300.")]
-            public void Linq73()
+            [Category("Join Operators")]
+            [Description("This sample shows how to perform a simple inner equijoin of two sequences to " +
+                "produce a flat result set that consists of each element in suppliers that has a matching element " +
+                "in customers.")]
+            public void Linq102()
             {
-                int[] primeFactorsOf300 = { 2, 2, 3, 5, 5 };
 
-                int uniqueFactors = primeFactorsOf300.Distinct().Count();
+                List<Customer> customers = GetCustomerList();
+                List<Supplier> suppliers = GetSupplierList();
 
-                Console.WriteLine("There are {0} unique prime factors of 300.", uniqueFactors);
+                var custSupJoin =
+                    from sup in suppliers
+                    join cust in customers on sup.Country equals cust.Country
+                    select new { Country = sup.Country, SupplierName = sup.SupplierName, CustomerName = cust.CompanyName };
+
+                foreach (var item in custSupJoin)
+                {
+                    Console.WriteLine("Country = {0}, Supplier = {1}, Customer = {2}", item.Country, item.SupplierName, item.CustomerName);
+                }
             }
 
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Count to get the number of odd ints in the array.")]
-            public void Linq74()
+            [Category("Join Operators")]
+            [Description("A group join produces a hierarchical sequence. The following query is an inner join " +
+                        " that produces a sequence of objects, each of which has a key and an inner sequence of all matching elements.")]
+            public void Linq103()
             {
-                int[] numbers = { 5, 4, 1, 3, 9, 8, 6, 7, 2, 0 };
 
-                int oddNumbers = numbers.Count(n => n % 2 == 1);
 
-                Console.WriteLine("There are {0} odd numbers in the list.", oddNumbers);
+                List<Customer> customers = GetCustomerList();
+                List<Supplier> suppliers = GetSupplierList();
+
+                var custSupQuery =
+                    from sup in suppliers
+                    join cust in customers on sup.Country equals cust.Country into cs
+                    select new { Key = sup.Country, Items = cs };
+
+
+                foreach (var item in custSupQuery)
+                {
+                    Console.WriteLine(item.Key + ":");
+                    foreach (var element in item.Items)
+                    {
+                        Console.WriteLine("   " + element.CompanyName);
+                    }
+                }
             }
 
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Count to return a list of customers and how many orders " +
-                         "each has.")]
-            public void Linq76()
+            [Category("Join Operators")]
+            [Description("The group join operator is more general than join, as this slightly more verbose " +
+                "version of the cross join sample shows.")]
+            public void Linq104()
+            {
+                string[] categories = new string[]{ 
+                "Beverages", 
+                "Condiments", 
+                "Vegetables", 
+                "Dairy Products", 
+                "Seafood" };
+
+                List<Product> products = GetProductList();
+
+                var prodByCategory =
+                    from cat in categories
+                    join prod in products on cat equals prod.Category into ps
+                    from p in ps
+                    select new { Category = cat, p.ProductName };
+
+                foreach (var item in prodByCategory)
+                {
+                    Console.WriteLine(item.ProductName + ": " + item.Category);
+                }
+            }
+            [Category("Join Operators")]
+            [Description("A left outer join produces a result set that includes all the left hand side elements at " +
+                "least once, even if they don't match any right hand side elements.")]
+            public void Linq105()
             {
                 List<Customer> customers = GetCustomerList();
+                List<Supplier> suppliers = GetSupplierList();
 
-                var orderCounts =
+                var supplierCusts =
+                    from sup in suppliers
+                    join cust in customers on sup.Country equals cust.Country into cs
+                    from c in cs.DefaultIfEmpty()  // DefaultIfEmpty preserves left-hand elements that have no matches on the right side 
+                    orderby sup.SupplierName
+                    select new
+                    {
+                        Country = sup.Country,
+                        CompanyName = c == null ? "(No customers)" : c.CompanyName,
+                        SupplierName = sup.SupplierName
+                    };
+
+                foreach (var item in supplierCusts)
+                {
+                    Console.WriteLine("{0} ({1}): {2}", item.SupplierName, item.Country, item.CompanyName);
+                }
+            }
+
+            [Category("Join Operators")]
+            [Description("For each customer in the table of customers, this query returns all the suppliers " +
+                         "from that same country, or else a string indicating that no suppliers from that country were found.")]
+            public void Linq106()
+            {
+
+                List<Customer> customers = GetCustomerList();
+                List<Supplier> suppliers = GetSupplierList();
+
+                var custSuppliers =
                     from cust in customers
-                    select new { cust.CustomerID, OrderCount = cust.Orders.Count() };
+                    join sup in suppliers on cust.Country equals sup.Country into ss
+                    from s in ss.DefaultIfEmpty()
+                    orderby cust.CompanyName
+                    select new
+                    {
+                        Country = cust.Country,
+                        CompanyName = cust.CompanyName,
+                        SupplierName = s == null ? "(No suppliers)" : s.SupplierName
+                    };
 
-                ObjectDumper.Write(orderCounts);
+                foreach (var item in custSuppliers)
+                {
+                    Console.WriteLine("{0} ({1}): {2}", item.CompanyName, item.Country, item.SupplierName);
+                }
             }
 
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Count to return a list of categories and how many products " +
-                         "each has.")]
-            public void Linq77()
+            [Category("Join Operators")]
+            [Description("For each supplier in the table of suppliers, this query returns all the customers " +
+                         "from the same city and country, or else a string indicating that no customers from that city/country were found. " +
+                         "Note the use of anonymous types to encapsulate the multiple key values.")]
+            public void Linq107()
             {
-                List<Product> products = GetProductList();
+                List<Customer> customers = GetCustomerList();
+                List<Supplier> suppliers = GetSupplierList();
 
-                var categoryCounts =
-                    from prod in products
-                    group prod by prod.Category into prodGroup
-                    select new { Category = prodGroup.Key, ProductCount = prodGroup.Count() };
+                var supplierCusts =
+                    from sup in suppliers
+                    join cust in customers on new { sup.City, sup.Country } equals new { cust.City, cust.Country } into cs
+                    from c in cs.DefaultIfEmpty() //Remove DefaultIfEmpty method call to make this an inner join
+                    orderby sup.SupplierName
+                    select new
+                    {
+                        Country = sup.Country,
+                        City = sup.City,
+                        SupplierName = sup.SupplierName,
+                        CompanyName = c == null ? "(No customers)" : c.CompanyName
+                    };
 
-                ObjectDumper.Write(categoryCounts);
-            }
-
-            //DONE Changed "get the total of" to "add all"
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Sum to add all the numbers in an array.")]
-            public void Linq78()
-            {
-                int[] numbers = { 5, 4, 1, 3, 9, 8, 6, 7, 2, 0 };
-
-                double numSum = numbers.Sum();
-
-                Console.WriteLine("The sum of the numbers is {0}.", numSum);
-            }
-
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Sum to get the total number of characters of all words " +
-                         "in the array.")]
-            public void Linq79()
-            {
-                string[] words = { "cherry", "apple", "blueberry" };
-
-                double totalChars = words.Sum(w => w.Length);
-
-                Console.WriteLine("There are a total of {0} characters in these words.", totalChars);
-            }
-
-
-
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Sum to get the total units in stock for each product category.")]
-            public void Linq80()
-            {
-                List<Product> products = GetProductList();
-
-                var categories =
-                    from prod in products
-                    group prod by prod.Category into prodGroup
-                    select new { Category = prodGroup.Key, TotalUnitsInStock = prodGroup.Sum(p => p.UnitsInStock) };
-
-                ObjectDumper.Write(categories);
-            }
-
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Min to get the lowest number in an array.")]
-            public void Linq81()
-            {
-                int[] numbers = { 5, 4, 1, 3, 9, 8, 6, 7, 2, 0 };
-
-                int minNum = numbers.Min();
-
-                Console.WriteLine("The minimum number is {0}.", minNum);
-            }
-
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Min to get the length of the shortest word in an array.")]
-            public void Linq82()
-            {
-                string[] words = { "cherry", "apple", "blueberry" };
-
-                int shortestWord = words.Min(w => w.Length);
-
-                Console.WriteLine("The shortest word is {0} characters long.", shortestWord);
-            }
-
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Min to get the cheapest price among each category's products.")]
-            public void Linq83()
-            {
-                List<Product> products = GetProductList();
-
-                var categories =
-                    from prod in products
-                    group prod by prod.Category into prodGroup
-                    select new { Category = prodGroup.Key, CheapestPrice = prodGroup.Min(p => p.UnitPrice) };
-
-                ObjectDumper.Write(categories);
-            }
-
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Min to get the products with the lowest price in each category.")]
-            public void Linq84()
-            {
-                List<Product> products = GetProductList();
-
-                var categories =
-                    from prod in products
-                    group prod by prod.Category into prodGroup
-                    let minPrice = prodGroup.Min(p => p.UnitPrice)
-                    select new { Category = prodGroup.Key, CheapestProducts = prodGroup.Where(p => p.UnitPrice == minPrice) };
-
-                ObjectDumper.Write(categories, 1);
-            }
-
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Max to get the highest number in an array. Note that the method returns a single value.")]
-            public void Linq85()
-            {
-                int[] numbers = { 5, 4, 1, 3, 9, 8, 6, 7, 2, 0 };
-
-                int maxNum = numbers.Max();
-
-                Console.WriteLine("The maximum number is {0}.", maxNum);
-            }
-
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Max to get the length of the longest word in an array.")]
-            public void Linq86()
-            {
-                string[] words = { "cherry", "apple", "blueberry" };
-
-                int longestLength = words.Max(w => w.Length);
-
-                Console.WriteLine("The longest word is {0} characters long.", longestLength);
-            }
-
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Max to get the most expensive price among each category's products.")]
-            public void Linq87()
-            {
-                List<Product> products = GetProductList();
-
-                var categories =
-                    from prod in products
-                    group prod by prod.Category into prodGroup
-                    select new { Category = prodGroup.Key, MostExpensivePrice = prodGroup.Max(p => p.UnitPrice) };
-
-                ObjectDumper.Write(categories);
-            }
-
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Max to get the products with the most expensive price in each category.")]
-            public void Linq88()
-            {
-                List<Product> products = GetProductList();
-
-                var categories =
-                    from prod in products
-                    group prod by prod.Category into prodGroup
-                    let maxPrice = prodGroup.Max(p => p.UnitPrice)
-                    select new { Category = prodGroup.Key, MostExpensiveProducts = prodGroup.Where(p => p.UnitPrice == maxPrice) };
-
-                ObjectDumper.Write(categories, 1);
-            }
-
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Average to get the average of all numbers in an array.")]
-            public void Linq89()
-            {
-                int[] numbers = { 5, 4, 1, 3, 9, 8, 6, 7, 2, 0 };
-
-                double averageNum = numbers.Average();
-
-                Console.WriteLine("The average number is {0}.", averageNum);
-            }
-
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Average to get the average length of the words in the array.")]
-            public void Linq90()
-            {
-                string[] words = { "cherry", "apple", "blueberry" };
-
-                double averageLength = words.Average(w => w.Length);
-
-                Console.WriteLine("The average word length is {0} characters.", averageLength);
-            }
-
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Average to get the average price of each category's products.")]
-            public void Linq91()
-            {
-                List<Product> products = GetProductList();
-
-                var categories =
-                    from prod in products
-                    group prod by prod.Category into prodGroup
-                    select new { Category = prodGroup.Key, AveragePrice = prodGroup.Average(p => p.UnitPrice) };
-
-                ObjectDumper.Write(categories);
-            }
-
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Aggregate to create a running product on the array that " +
-                         "calculates the total product of all elements.")]
-            public void Linq92()
-            {
-                double[] doubles = { 1.7, 2.3, 1.9, 4.1, 2.9 };
-
-                double product = doubles.Aggregate((runningProduct, nextFactor) => runningProduct * nextFactor);
-
-                Console.WriteLine("Total product of all numbers: {0}", product);
-            }
-
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Aggregate to create a running account balance that " +
-                         "subtracts each withdrawal from the initial balance of 100, as long as " +
-                         "the balance never drops below 0.")]
-            public void Linq93()
-            {
-                double startBalance = 100.0;
-
-                int[] attemptedWithdrawals = { 20, 10, 40, 50, 10, 70, 30 };
-
-                double endBalance =
-                    attemptedWithdrawals.Aggregate(startBalance,
-                        (balance, nextWithdrawal) =>
-                            ((nextWithdrawal <= balance) ? (balance - nextWithdrawal) : balance));
-
-                Console.WriteLine("Ending balance: {0}", endBalance);
-            }
-
-            public List<Product> GetProductList()
-            {
-                if (productList == null)
-                    createLists();
-
-                return productList;
+                foreach (var item in supplierCusts)
+                {
+                    Console.WriteLine("{0} ({1}, {2}): {3}", item.SupplierName, item.City, item.Country, item.CompanyName);
+                }
             }
 
             public List<Customer> GetCustomerList()
@@ -356,6 +243,22 @@ namespace AggregateOperators
                     createLists();
 
                 return customerList;
+            }
+
+            public List<Supplier> GetSupplierList()
+            {
+                if (supplierList == null)
+                    createLists();
+
+                return supplierList;
+            }
+
+            public List<Product> GetProductList()
+            {
+                if (productList == null)
+                    createLists();
+
+                return productList;
             }
 
             private void createLists()
@@ -442,9 +345,41 @@ namespace AggregateOperators
                     new Product { ProductID = 77, ProductName = "Original Frankfurter gr�ne So�e", Category = "Condiments", UnitPrice = 13.0000M, UnitsInStock = 32 }
                 };
 
+                supplierList = new List<Supplier>(){
+                    new Supplier {SupplierName = "Exotic Liquids", Address = "49 Gilbert St.", City = "London", Country = "UK"},
+                    new Supplier {SupplierName = "New Orleans Cajun Delights", Address = "P.O. Box 78934", City = "New Orleans", Country = "USA"},
+                    new Supplier {SupplierName = "Grandma Kelly's Homestead", Address = "707 Oxford Rd.", City = "Ann Arbor", Country = "USA"},
+                    new Supplier {SupplierName = "Tokyo Traders", Address = "9-8 Sekimai Musashino-shi", City = "Tokyo", Country = "Japan"},
+                    new Supplier {SupplierName = "Cooperativa de Quesos 'Las Cabras'", Address = "Calle del Rosal 4", City = "Oviedo", Country = "Spain"},
+                    new Supplier {SupplierName = "Mayumi's", Address = "92 Setsuko Chuo-ku", City = "Osaka", Country = "Japan"},
+                    new Supplier {SupplierName = "Pavlova, Ltd.", Address = "74 Rose St. Moonie Ponds", City = "Melbourne", Country = "Australia"},
+                    new Supplier {SupplierName = "Specialty Biscuits, Ltd.", Address = "29 King's Way", City = "Manchester", Country = "UK"},
+                    new Supplier {SupplierName = "PB Kn�ckebr�d AB", Address = "Kaloadagatan 13", City = "G�teborg", Country = "Sweden"},
+                    new Supplier {SupplierName = "Refrescos Americanas LTDA", Address = "Av. das Americanas 12.890", City = "Sao Paulo", Country = "Brazil"},
+                    new Supplier {SupplierName = "Heli S��waren GmbH & Co. KG", Address = "Tiergartenstra�e 5", City = "Berlin", Country = "Germany"},
+                    new Supplier {SupplierName = "Plutzer Lebensmittelgro�m�rkte AG", Address = "Bogenallee 51", City = "Frankfurt", Country = "Germany"},
+                    new Supplier {SupplierName = "Nord-Ost-Fisch Handelsgesellschaft mbH", Address = "Frahmredder 112a", City = "Cuxhaven", Country = "Germany"},
+                    new Supplier {SupplierName = "Formaggi Fortini s.r.l.", Address = "Viale Dante, 75", City = "Ravenna", Country = "Italy"},
+                    new Supplier {SupplierName = "Norske Meierier", Address = "Hatlevegen 5", City = "Sandvika", Country = "Norway"},
+                    new Supplier {SupplierName = "Bigfoot Breweries", Address = "3400 - 8th Avenue Suite 210", City = "Bend", Country = "USA"},
+                    new Supplier {SupplierName = "Svensk Sj�f�da AB", Address = "Brovallav�gen 231", City = "Stockholm", Country = "Sweden"},
+                    new Supplier {SupplierName = "Aux joyeux eccl�siastiques", Address = "203, Rue des Francs-Bourgeois", City = "Paris", Country = "France"},
+                    new Supplier {SupplierName = "New England Seafood Cannery", Address = "Order Processing Dept. 2100 Paul Revere Blvd.", City = "Boston", Country = "USA"},
+                    new Supplier {SupplierName = "Leka Trading", Address = "471 Serangoon Loop, Suite #402", City = "Singapore", Country = "Singapore"},
+                    new Supplier {SupplierName = "Lyngbysild", Address = "Lyngbysild Fiskebakken 10", City = "Lyngby", Country = "Denmark"},
+                    new Supplier {SupplierName = "Zaanse Snoepfabriek", Address = "Verkoop Rijnweg 22", City = "Zaandam", Country = "Netherlands"},
+                    new Supplier {SupplierName = "Karkki Oy", Address = "Valtakatu 12", City = "Lappeenranta", Country = "Finland"},
+                    new Supplier {SupplierName = "G'day, Mate", Address = "170 Prince Edward Parade Hunter's Hill", City = "Sydney", Country = "Australia"},
+                    new Supplier {SupplierName = "Ma Maison", Address = "2960 Rue St. Laurent", City = "Montr�al", Country = "Canada"},
+                    new Supplier {SupplierName = "Pasta Buttini s.r.l.", Address = "Via dei Gelsomini, 153", City = "Salerno", Country = "Italy"},
+                    new Supplier {SupplierName = "Escargots Nouveaux", Address = "22, rue H. Voiron", City = "Montceau", Country = "France"},
+                    new Supplier {SupplierName = "Gai p�turage", Address = "Bat. B 3, rue des Alpes", City = "Annecy", Country = "France"},
+                    new Supplier {SupplierName = "For�ts d'�rables", Address = "148 rue Chasseur", City = "Ste-Hyacinthe", Country = "Canada"},
+                };
+
                 // Customer/Order data read into memory from XML file using XLinq:
                 customerList = (
-                    from e in XDocument.Load(System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("AggregateOperators.customers.xml")).
+                    from e in XDocument.Load(System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("JoinOperators.customers.xml")).
                               Root.Elements("customer")
                     select new Customer
                     {

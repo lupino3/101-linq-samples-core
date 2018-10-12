@@ -5,6 +5,5 @@
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="../Common/customers.xml" />
-    <ProjectReference Include="..\Common\ObjectDumper\ObjectDumper.csproj" />
   </ItemGroup>
 </Project>

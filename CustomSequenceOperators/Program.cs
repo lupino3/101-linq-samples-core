@@ -6,8 +6,22 @@ using System.ComponentModel;
 using System.Data;
 using System.Xml.Linq;
 
-namespace GroupingOperators
+namespace CustomSequenceOperators
 {
+    public static class CustomSequenceOperators
+    {
+        public static IEnumerable<S> Combine<S>(this IEnumerable<DataRow> first, IEnumerable<DataRow> second, System.Func<DataRow, DataRow, S> func)
+        {
+            using (IEnumerator<DataRow> e1 = first.GetEnumerator(), e2 = second.GetEnumerator())
+            {
+                while (e1.MoveNext() && e2.MoveNext())
+                {
+                    yield return func(e1.Current, e2.Current);
+                }
+            }
+        }
+    }
+
     class Program
     {
         static void Main(string[] args)
@@ -15,12 +29,7 @@ namespace GroupingOperators
             LinqSamples samples = new LinqSamples();
 
             // Comment or uncomment the method calls below to run or not
-            samples.DataSetLinq40();    // This sample uses group by to partition a list of numbers by their remainder when divided by 5.
-            samples.DataSetLinq41();    // This sample uses group by to partition a list of words by their first letter.
-            samples.DataSetLinq42();    // This sample uses group by to partition a list of products by category.
-            samples.DataSetLinq43();    // This sample uses group by to partition a list of each customer's orders, first by year, and then by month.
-            samples.DataSetLinq44();    // This sample uses GroupBy to partition trimmed elements of an array using a custom comparer that matches words that are anagrams of each other.
-            samples.DataSetLinq45();    // This sample uses GroupBy to partition trimmed elements of an array using a custom comparer that matches words that are anagrams of each other, and then converts the results to uppercase.
+			samples.DataSetLinq98();    // This sample uses a user-created sequence operator, Combine, to calculate the dot product of two vectors.
         }
 
         private class LinqSamples
@@ -32,186 +41,19 @@ namespace GroupingOperators
                 testDS = TestHelper.CreateTestDataset();
             }
 
-            [Category("Grouping Operators")]
-            [Description("This sample uses group by to partition a list of numbers by " +
-                        "their remainder when divided by 5.")]
-            public void DataSetLinq40()
+            [Category("Custom Sequence Operators")]
+            [Description("This sample uses a user-created sequence operator, Combine, to calculate the " +
+                         "dot product of two vectors.")]
+            public void DataSetLinq98()
             {
 
-                var numbers = testDS.Tables["Numbers"].AsEnumerable();
+                var numbersA = testDS.Tables["NumbersA"].AsEnumerable();
+                var numbersB = testDS.Tables["NumbersB"].AsEnumerable();
 
-                var numberGroups =
-                    from n in numbers
-                    group n by n.Field<int>("number") % 5 into g
-                    select new { Remainder = g.Key, Numbers = g };
-
-                foreach (var g in numberGroups)
-                {
-                    Console.WriteLine("Numbers with a remainder of {0} when divided by 5:", g.Remainder);
-                    foreach (var n in g.Numbers)
-                    {
-                        Console.WriteLine(n.Field<int>("number"));
-                    }
-                }
+                int dotProduct = numbersA.Combine(numbersB, (a, b) => a.Field<int>("number") * b.Field<int>("number")).Sum();
+                Console.WriteLine("Dot product: {0}", dotProduct);
             }
-
-            [Category("Grouping Operators")]
-            [Description("This sample uses group by to partition a list of words by " +
-                         "their first letter.")]
-            public void DataSetLinq41()
-            {
-
-                var words4 = testDS.Tables["Words4"].AsEnumerable();
-
-                var wordGroups =
-                    from w in words4
-                    group w by w.Field<string>("word")[0] into g
-                    select new { FirstLetter = g.Key, Words = g };
-
-                foreach (var g in wordGroups)
-                {
-                    Console.WriteLine("Words that start with the letter '{0}':", g.FirstLetter);
-                    foreach (var w in g.Words)
-                    {
-                        Console.WriteLine(w.Field<string>("word"));
-                    }
-                }
-            }
-
-            [Category("Grouping Operators")]
-            [Description("This sample uses group by to partition a list of products by category.")]
-            public void DataSetLinq42()
-            {
-
-                var products = testDS.Tables["Products"].AsEnumerable();
-
-                var productGroups =
-                    from p in products
-                    group p by p.Field<string>("Category") into g
-                    select new { Category = g.Key, Products = g };
-
-                foreach (var g in productGroups)
-                {
-                    Console.WriteLine("Category: {0}", g.Category);
-                    foreach (var w in g.Products)
-                    {
-                        Console.WriteLine("\t" + w.Field<string>("ProductName"));
-                    }
-                }
-            }
-
-            [Category("Grouping Operators")]
-            [Description("This sample uses group by to partition a list of each customer's orders, " +
-                         "first by year, and then by month.")]
-            public void DataSetLinq43()
-            {
-
-                var customers = testDS.Tables["Customers"].AsEnumerable();
-
-                var customerOrderGroups =
-                    from c in customers
-                    select
-                        new
-                        {
-                            CompanyName = c.Field<string>("CompanyName"),
-                            YearGroups =
-                                from o in c.GetChildRows("CustomersOrders")
-                                group o by o.Field<DateTime>("OrderDate").Year into yg
-                                select
-                                    new
-                                    {
-                                        Year = yg.Key,
-                                        MonthGroups =
-                                            from o in yg
-                                            group o by o.Field<DateTime>("OrderDate").Month into mg
-                                            select new { Month = mg.Key, Orders = mg }
-                                    }
-                        };
-
-                foreach (var cog in customerOrderGroups)
-                {
-                    Console.WriteLine("CompanyName= {0}", cog.CompanyName);
-                    foreach (var yg in cog.YearGroups)
-                    {
-                        Console.WriteLine("\t Year= {0}", yg.Year);
-                        foreach (var mg in yg.MonthGroups)
-                        {
-                            Console.WriteLine("\t\t Month= {0}", mg.Month);
-                            foreach (var order in mg.Orders)
-                            {
-                                Console.WriteLine("\t\t\t OrderID= {0} ", order.Field<int>("OrderID"));
-                                Console.WriteLine("\t\t\t OrderDate= {0} ", order.Field<DateTime>("OrderDate"));
-                            }
-                        }
-                    }
-                }
-            }
-
-            private class AnagramEqualityComparer : IEqualityComparer<string>
-            {
-                public bool Equals(string x, string y)
-                {
-                    return getCanonicalString(x) == getCanonicalString(y);
-                }
-
-                public int GetHashCode(string obj)
-                {
-                    return getCanonicalString(obj).GetHashCode();
-                }
-
-                private string getCanonicalString(string word)
-                {
-                    char[] wordChars = word.ToCharArray();
-                    Array.Sort<char>(wordChars);
-                    return new string(wordChars);
-                }
-            }
-
-            [Category("Grouping Operators")]
-            [Description("This sample uses GroupBy to partition trimmed elements of an array using " +
-                         "a custom comparer that matches words that are anagrams of each other.")]
-            public void DataSetLinq44()
-            {
-
-                var anagrams = testDS.Tables["Anagrams"].AsEnumerable();
-
-                var orderGroups = anagrams.GroupBy(w => w.Field<string>("anagram").Trim(), new AnagramEqualityComparer());
-
-                foreach (var g in orderGroups)
-                {
-                    Console.WriteLine("Key: {0}", g.Key);
-                    foreach (var w in g)
-                    {
-                        Console.WriteLine("\t" + w.Field<string>("anagram"));
-                    }
-                }
-            }
-
-            [Category("Grouping Operators")]
-            [Description("This sample uses GroupBy to partition trimmed elements of an array using " +
-                         "a custom comparer that matches words that are anagrams of each other, " +
-                         "and then converts the results to uppercase.")]
-            public void DataSetLinq45()
-            {
-
-                var anagrams = testDS.Tables["Anagrams"].AsEnumerable();
-
-                var orderGroups = anagrams.GroupBy(
-                    w => w.Field<string>("anagram").Trim(),
-                    a => a.Field<string>("anagram").ToUpper(),
-                    new AnagramEqualityComparer()
-                    );
-
-                foreach (var g in orderGroups)
-                {
-                    Console.WriteLine("Key: {0}", g.Key);
-                    foreach (var w in g)
-                    {
-                        Console.WriteLine("\t" + w);
-                    }
-                }
-            }
-        }	
+        }
     }
 
     #region "Test Helper"
@@ -514,7 +356,7 @@ namespace GroupingOperators
             ds.Relations.Add(co);
 
             var customerList = (
-                from e in XDocument.Load(System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("GroupingOperators.customers.xml")).
+                from e in XDocument.Load(System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("CustomSequenceOperators.customers.xml")).
                           Root.Elements("customer")
                 select new Customer
                 {
@@ -603,21 +445,21 @@ namespace GroupingOperators
                 UnitPrice = 81.0000M, UnitsInStock = 40 },
               new { ProductID = 21, ProductName = "Sir Rodney's Scones", Category = "Confections", 
                 UnitPrice = 10.0000M, UnitsInStock = 3 },
-              new { ProductID = 22, ProductName = "Gustaf's Knï¿½ckebrï¿½d", Category = "Grains/Cereals", 
+              new { ProductID = 22, ProductName = "Gustaf's Knäckebröd", Category = "Grains/Cereals", 
                 UnitPrice = 21.0000M, UnitsInStock = 104 },
-              new { ProductID = 23, ProductName = "Tunnbrï¿½d", Category = "Grains/Cereals", 
+              new { ProductID = 23, ProductName = "Tunnbröd", Category = "Grains/Cereals", 
                 UnitPrice = 9.0000M, UnitsInStock = 61 },
-              new { ProductID = 24, ProductName = "Guaranï¿½ Fantï¿½stica", Category = "Beverages", 
+              new { ProductID = 24, ProductName = "Guaraná Fantástica", Category = "Beverages", 
                 UnitPrice = 4.5000M, UnitsInStock = 20 },
-              new { ProductID = 25, ProductName = "NuNuCa Nuï¿½-Nougat-Creme", Category = "Confections", 
+              new { ProductID = 25, ProductName = "NuNuCa Nuß-Nougat-Creme", Category = "Confections", 
                 UnitPrice = 14.0000M, UnitsInStock = 76 },
-              new { ProductID = 26, ProductName = "Gumbï¿½r Gummibï¿½rchen", Category = "Confections", 
+              new { ProductID = 26, ProductName = "Gumbär Gummibärchen", Category = "Confections", 
                 UnitPrice = 31.2300M, UnitsInStock = 15 },
               new { ProductID = 27, ProductName = "Schoggi Schokolade", Category = "Confections", 
                 UnitPrice = 43.9000M, UnitsInStock = 49 },
-              new { ProductID = 28, ProductName = "Rï¿½ssle Sauerkraut", Category = "Produce", 
+              new { ProductID = 28, ProductName = "Rössle Sauerkraut", Category = "Produce", 
                 UnitPrice = 45.6000M, UnitsInStock = 26 },
-              new { ProductID = 29, ProductName = "Thï¿½ringer Rostbratwurst", Category = "Meat/Poultry", 
+              new { ProductID = 29, ProductName = "Thüringer Rostbratwurst", Category = "Meat/Poultry", 
                 UnitPrice = 123.7900M, UnitsInStock = 0 },
               new { ProductID = 30, ProductName = "Nord-Ost Matjeshering", Category = "Seafood", 
                 UnitPrice = 25.8900M, UnitsInStock = 10 },
@@ -635,7 +477,7 @@ namespace GroupingOperators
                 UnitPrice = 19.0000M, UnitsInStock = 112 },
               new { ProductID = 37, ProductName = "Gravad lax", Category = "Seafood", 
                 UnitPrice = 26.0000M, UnitsInStock = 11 },
-              new { ProductID = 38, ProductName = "Cï¿½te de Blaye", Category = "Beverages", 
+              new { ProductID = 38, ProductName = "Côte de Blaye", Category = "Beverages", 
                 UnitPrice = 263.5000M, UnitsInStock = 17 },
               new { ProductID = 39, ProductName = "Chartreuse verte", Category = "Beverages", 
                 UnitPrice = 18.0000M, UnitsInStock = 69 },
@@ -667,9 +509,9 @@ namespace GroupingOperators
                 UnitPrice = 7.0000M, UnitsInStock = 38 },
               new { ProductID = 53, ProductName = "Perth Pasties", Category = "Meat/Poultry", 
                 UnitPrice = 32.8000M, UnitsInStock = 0 },
-              new { ProductID = 54, ProductName = "Tourtiï¿½re", Category = "Meat/Poultry", 
+              new { ProductID = 54, ProductName = "Tourtière", Category = "Meat/Poultry", 
                 UnitPrice = 7.4500M, UnitsInStock = 21 },
-              new { ProductID = 55, ProductName = "Pï¿½tï¿½ chinois", Category = "Meat/Poultry", 
+              new { ProductID = 55, ProductName = "Pâté chinois", Category = "Meat/Poultry", 
                 UnitPrice = 24.0000M, UnitsInStock = 115 },
               new { ProductID = 56, ProductName = "Gnocchi di nonna Alice", Category = "Grains/Cereals", 
                 UnitPrice = 38.0000M, UnitsInStock = 21 },
@@ -681,13 +523,13 @@ namespace GroupingOperators
                 UnitPrice = 55.0000M, UnitsInStock = 79 },
               new { ProductID = 60, ProductName = "Camembert Pierrot", Category = "Dairy Products", 
                 UnitPrice = 34.0000M, UnitsInStock = 19 },
-              new { ProductID = 61, ProductName = "Sirop d'ï¿½rable", Category = "Condiments", 
+              new { ProductID = 61, ProductName = "Sirop d'érable", Category = "Condiments", 
                 UnitPrice = 28.5000M, UnitsInStock = 113 },
               new { ProductID = 62, ProductName = "Tarte au sucre", Category = "Confections", 
                 UnitPrice = 49.3000M, UnitsInStock = 17 },
               new { ProductID = 63, ProductName = "Vegie-spread", Category = "Condiments", 
                 UnitPrice = 43.9000M, UnitsInStock = 24 },
-              new { ProductID = 64, ProductName = "Wimmers gute Semmelknï¿½del", Category = "Grains/Cereals", 
+              new { ProductID = 64, ProductName = "Wimmers gute Semmelknödel", Category = "Grains/Cereals", 
                 UnitPrice = 33.2500M, UnitsInStock = 22 },
               new { ProductID = 65, ProductName = "Louisiana Fiery Hot Pepper Sauce", Category = "Condiments", 
                 UnitPrice = 21.0500M, UnitsInStock = 76 },
@@ -705,15 +547,15 @@ namespace GroupingOperators
                 UnitPrice = 21.5000M, UnitsInStock = 26 },
               new { ProductID = 72, ProductName = "Mozzarella di Giovanni", Category = "Dairy Products", 
                 UnitPrice = 34.8000M, UnitsInStock = 14 },
-              new { ProductID = 73, ProductName = "Rï¿½d Kaviar", Category = "Seafood", 
+              new { ProductID = 73, ProductName = "Röd Kaviar", Category = "Seafood", 
                 UnitPrice = 15.0000M, UnitsInStock = 101 },
               new { ProductID = 74, ProductName = "Longlife Tofu", Category = "Produce", 
                 UnitPrice = 10.0000M, UnitsInStock = 4 },
-              new { ProductID = 75, ProductName = "Rhï¿½nbrï¿½u Klosterbier", Category = "Beverages", 
+              new { ProductID = 75, ProductName = "Rhönbräu Klosterbier", Category = "Beverages", 
                 UnitPrice = 7.7500M, UnitsInStock = 125 },
-              new { ProductID = 76, ProductName = "Lakkalikï¿½ï¿½ri", Category = "Beverages", 
+              new { ProductID = 76, ProductName = "Lakkalikööri", Category = "Beverages", 
                 UnitPrice = 18.0000M, UnitsInStock = 57 },
-              new { ProductID = 77, ProductName = "Original Frankfurter grï¿½ne Soï¿½e", Category = "Condiments", 
+              new { ProductID = 77, ProductName = "Original Frankfurter grüne Soße", Category = "Condiments", 
                 UnitPrice = 13.0000M, UnitsInStock = 32 }
             };
 

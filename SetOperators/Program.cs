@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Xml.Linq;
 using System.ComponentModel;
+using System.Xml.Linq;
 
-namespace AggregateOperators
+namespace SetOperators
 {
     class Program
     {
@@ -15,37 +15,28 @@ namespace AggregateOperators
 
             //Comment or uncomment the method calls below to run or not
 
-            samples.Linq73(); // This sample uses Count to get the number of unique prime factors of 300
-            samples.Linq74(); // This sample uses Count to get the number of odd ints in the array
-            samples.Linq76(); // This sample uses Count to return a list of customers and how many orders each has
+            samples.Linq46(); // This sample uses Distinct to remove  duplicate  elements in a sequence of factors of 300
 
-            samples.Linq77(); // This sample uses Count to return a list of categories and how many products each has
-            samples.Linq78(); // This sample uses Sum to add all the numbers in an array
-            samples.Linq79(); // This sample uses Sum to get the total number of characters of all words in the array
+            samples.Linq47(); // This sample uses Distinct to find the unique Category names
 
-            samples.Linq80(); // This sample uses Sum to get the total units in stock for each product category
-            samples.Linq81(); // This sample uses Min to get the lowest number in an array
-            samples.Linq82(); // This sample uses Min to get the length of the shortest word in an array
+            samples.Linq48(); // This sample uses Union to create  one sequence that contains the unique values from both 
+                              // arrays
 
-            samples.Linq83(); // This sample uses Min to get the cheapest price among each category's products
-            samples.Linq84(); // This sample uses Min to get the products with the lowest price in each category
+            samples.Linq49(); // This sample uses the Union method to create  one sequence that contains the unique first 
+                              // letter from both product and customer names. Union is only available through method 
+                              // syntax
 
-            samples.Linq85(); // This sample uses Max to get the highest number in an array. Note that the method 
-                              // returns a single value
+            samples.Linq50(); // This sample uses Intersect to create one sequence that contains the common values shared 
+                              // by both arrays
 
-            samples.Linq86(); // This sample uses Max to get the length of the longest word in an array
-            samples.Linq87(); // This sample uses Max to get the most expensive price among each category's products
-            samples.Linq88(); // This sample uses Max to get the products with the most expensive price in each category
+            samples.Linq51(); // This sample uses Intersect  to create one sequence that contains the common first letter 
+                              // from both product and customer names
 
-            samples.Linq89(); // This sample uses Average to get the average of all numbers in an array
-            samples.Linq90(); // This sample uses Average to get the average length of the words in the array
-            samples.Linq91(); // This sample uses Average to get the average price of each category's products
+            samples.Linq52(); // This sample uses Except to create a sequence that contains the values from numbersA that 
+                              // are not also in numbersB
 
-            samples.Linq92(); // This sample uses Aggregate to create a running product on the array that calculates 
-                              // the total product of all elements
-
-            samples.Linq93(); // This sample uses Aggregate to create a running account balance that subtracts each 
-                              // withdrawal from the initial balance of 100, as long as the balance never drops below 0
+            samples.Linq53(); // This sample uses Except to create one  sequence that contains the 1st letters of product 
+                              // names that are not also first letters of customer names
         }
 
         public class Product
@@ -83,263 +74,161 @@ namespace AggregateOperators
             private List<Product> productList;
             private List<Customer> customerList;
 
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Count to get the number of unique prime factors of 300.")]
-            public void Linq73()
+            [Category("Set Operators")]
+            [Description("This sample uses Distinct to remove duplicate elements in a sequence of " +
+                        "factors of 300.")]
+            public void Linq46()
             {
-                int[] primeFactorsOf300 = { 2, 2, 3, 5, 5 };
+                int[] factorsOf300 = { 2, 2, 3, 5, 5 };
 
-                int uniqueFactors = primeFactorsOf300.Distinct().Count();
+                var uniqueFactors = factorsOf300.Distinct();
 
-                Console.WriteLine("There are {0} unique prime factors of 300.", uniqueFactors);
+                Console.WriteLine("Prime factors of 300:");
+                foreach (var f in uniqueFactors)
+                {
+                    Console.WriteLine(f);
+                }
             }
 
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Count to get the number of odd ints in the array.")]
-            public void Linq74()
+            [Category("Set Operators")]
+            [Description("This sample uses Distinct to find the unique Category names.")]
+            public void Linq47()
             {
-                int[] numbers = { 5, 4, 1, 3, 9, 8, 6, 7, 2, 0 };
+                List<Product> products = GetProductList();
 
-                int oddNumbers = numbers.Count(n => n % 2 == 1);
+                var categoryNames = (
+                    from prod in products
+                    select prod.Category)
+                    .Distinct();
 
-                Console.WriteLine("There are {0} odd numbers in the list.", oddNumbers);
+                Console.WriteLine("Category names:");
+                foreach (var n in categoryNames)
+                {
+                    Console.WriteLine(n);
+                }
             }
 
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Count to return a list of customers and how many orders " +
-                         "each has.")]
-            public void Linq76()
+            [Category("Set Operators")]
+            [Description("This sample uses Union to create one sequence that contains the unique values " +
+                         "from both arrays.")]
+            public void Linq48()
             {
+                int[] numbersA = { 0, 2, 4, 5, 6, 8, 9 };
+                int[] numbersB = { 1, 3, 5, 7, 8 };
+
+                var uniqueNumbers = numbersA.Union(numbersB);
+
+                Console.WriteLine("Unique numbers from both arrays:");
+                foreach (var n in uniqueNumbers)
+                {
+                    Console.WriteLine(n);
+                }
+            }
+
+            [Category("Set Operators")]
+            [Description("This sample uses the Union method to create one sequence that contains the unique first letter " +
+                         "from both product and customer names. Union is only available through method syntax.")]
+            public void Linq49()
+            {
+                List<Product> products = GetProductList();
                 List<Customer> customers = GetCustomerList();
 
-                var orderCounts =
+                var productFirstChars =
+                    from prod in products
+                    select prod.ProductName[0];
+                var customerFirstChars =
                     from cust in customers
-                    select new { cust.CustomerID, OrderCount = cust.Orders.Count() };
+                    select cust.CompanyName[0];
 
-                ObjectDumper.Write(orderCounts);
+                var uniqueFirstChars = productFirstChars.Union(customerFirstChars);
+
+                Console.WriteLine("Unique first letters from Product names and Customer names:");
+                foreach (var ch in uniqueFirstChars)
+                {
+                    Console.WriteLine(ch);
+                }
             }
 
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Count to return a list of categories and how many products " +
-                         "each has.")]
-            public void Linq77()
+            [Category("Set Operators")]
+            [Description("This sample uses Intersect to create one sequence that contains the common values " +
+                        "shared by both arrays.")]
+            public void Linq50()
+            {
+                int[] numbersA = { 0, 2, 4, 5, 6, 8, 9 };
+                int[] numbersB = { 1, 3, 5, 7, 8 };
+
+                var commonNumbers = numbersA.Intersect(numbersB);
+
+                Console.WriteLine("Common numbers shared by both arrays:");
+                foreach (var n in commonNumbers)
+                {
+                    Console.WriteLine(n);
+                }
+            }
+
+            [Category("Set Operators")]
+            [Description("This sample uses Intersect to create one sequence that contains the common first letter " +
+                         "from both product and customer names.")]
+            public void Linq51()
             {
                 List<Product> products = GetProductList();
+                List<Customer> customers = GetCustomerList();
 
-                var categoryCounts =
+                var productFirstChars =
                     from prod in products
-                    group prod by prod.Category into prodGroup
-                    select new { Category = prodGroup.Key, ProductCount = prodGroup.Count() };
+                    select prod.ProductName[0];
+                var customerFirstChars =
+                    from cust in customers
+                    select cust.CompanyName[0];
 
-                ObjectDumper.Write(categoryCounts);
+                var commonFirstChars = productFirstChars.Intersect(customerFirstChars);
+
+                Console.WriteLine("Common first letters from Product names and Customer names:");
+                foreach (var ch in commonFirstChars)
+                {
+                    Console.WriteLine(ch);
+                }
             }
 
-            //DONE Changed "get the total of" to "add all"
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Sum to add all the numbers in an array.")]
-            public void Linq78()
+            [Category("Set Operators")]
+            [Description("This sample uses Except to create a sequence that contains the values from numbersA" +
+                         "that are not also in numbersB.")]
+            public void Linq52()
             {
-                int[] numbers = { 5, 4, 1, 3, 9, 8, 6, 7, 2, 0 };
+                int[] numbersA = { 0, 2, 4, 5, 6, 8, 9 };
+                int[] numbersB = { 1, 3, 5, 7, 8 };
 
-                double numSum = numbers.Sum();
+                IEnumerable<int> aOnlyNumbers = numbersA.Except(numbersB);
 
-                Console.WriteLine("The sum of the numbers is {0}.", numSum);
+                Console.WriteLine("Numbers in first array but not second array:");
+                foreach (var n in aOnlyNumbers)
+                {
+                    Console.WriteLine(n);
+                }
             }
 
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Sum to get the total number of characters of all words " +
-                         "in the array.")]
-            public void Linq79()
-            {
-                string[] words = { "cherry", "apple", "blueberry" };
-
-                double totalChars = words.Sum(w => w.Length);
-
-                Console.WriteLine("There are a total of {0} characters in these words.", totalChars);
-            }
-
-
-
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Sum to get the total units in stock for each product category.")]
-            public void Linq80()
+            [Category("Set Operators")]
+            [Description("This sample uses Except to create one sequence that contains the first letters " +
+                         "of product names that are not also first letters of customer names.")]
+            public void Linq53()
             {
                 List<Product> products = GetProductList();
+                List<Customer> customers = GetCustomerList();
 
-                var categories =
+                var productFirstChars =
                     from prod in products
-                    group prod by prod.Category into prodGroup
-                    select new { Category = prodGroup.Key, TotalUnitsInStock = prodGroup.Sum(p => p.UnitsInStock) };
+                    select prod.ProductName[0];
+                var customerFirstChars =
+                    from cust in customers
+                    select cust.CompanyName[0];
 
-                ObjectDumper.Write(categories);
-            }
+                var productOnlyFirstChars = productFirstChars.Except(customerFirstChars);
 
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Min to get the lowest number in an array.")]
-            public void Linq81()
-            {
-                int[] numbers = { 5, 4, 1, 3, 9, 8, 6, 7, 2, 0 };
-
-                int minNum = numbers.Min();
-
-                Console.WriteLine("The minimum number is {0}.", minNum);
-            }
-
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Min to get the length of the shortest word in an array.")]
-            public void Linq82()
-            {
-                string[] words = { "cherry", "apple", "blueberry" };
-
-                int shortestWord = words.Min(w => w.Length);
-
-                Console.WriteLine("The shortest word is {0} characters long.", shortestWord);
-            }
-
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Min to get the cheapest price among each category's products.")]
-            public void Linq83()
-            {
-                List<Product> products = GetProductList();
-
-                var categories =
-                    from prod in products
-                    group prod by prod.Category into prodGroup
-                    select new { Category = prodGroup.Key, CheapestPrice = prodGroup.Min(p => p.UnitPrice) };
-
-                ObjectDumper.Write(categories);
-            }
-
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Min to get the products with the lowest price in each category.")]
-            public void Linq84()
-            {
-                List<Product> products = GetProductList();
-
-                var categories =
-                    from prod in products
-                    group prod by prod.Category into prodGroup
-                    let minPrice = prodGroup.Min(p => p.UnitPrice)
-                    select new { Category = prodGroup.Key, CheapestProducts = prodGroup.Where(p => p.UnitPrice == minPrice) };
-
-                ObjectDumper.Write(categories, 1);
-            }
-
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Max to get the highest number in an array. Note that the method returns a single value.")]
-            public void Linq85()
-            {
-                int[] numbers = { 5, 4, 1, 3, 9, 8, 6, 7, 2, 0 };
-
-                int maxNum = numbers.Max();
-
-                Console.WriteLine("The maximum number is {0}.", maxNum);
-            }
-
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Max to get the length of the longest word in an array.")]
-            public void Linq86()
-            {
-                string[] words = { "cherry", "apple", "blueberry" };
-
-                int longestLength = words.Max(w => w.Length);
-
-                Console.WriteLine("The longest word is {0} characters long.", longestLength);
-            }
-
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Max to get the most expensive price among each category's products.")]
-            public void Linq87()
-            {
-                List<Product> products = GetProductList();
-
-                var categories =
-                    from prod in products
-                    group prod by prod.Category into prodGroup
-                    select new { Category = prodGroup.Key, MostExpensivePrice = prodGroup.Max(p => p.UnitPrice) };
-
-                ObjectDumper.Write(categories);
-            }
-
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Max to get the products with the most expensive price in each category.")]
-            public void Linq88()
-            {
-                List<Product> products = GetProductList();
-
-                var categories =
-                    from prod in products
-                    group prod by prod.Category into prodGroup
-                    let maxPrice = prodGroup.Max(p => p.UnitPrice)
-                    select new { Category = prodGroup.Key, MostExpensiveProducts = prodGroup.Where(p => p.UnitPrice == maxPrice) };
-
-                ObjectDumper.Write(categories, 1);
-            }
-
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Average to get the average of all numbers in an array.")]
-            public void Linq89()
-            {
-                int[] numbers = { 5, 4, 1, 3, 9, 8, 6, 7, 2, 0 };
-
-                double averageNum = numbers.Average();
-
-                Console.WriteLine("The average number is {0}.", averageNum);
-            }
-
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Average to get the average length of the words in the array.")]
-            public void Linq90()
-            {
-                string[] words = { "cherry", "apple", "blueberry" };
-
-                double averageLength = words.Average(w => w.Length);
-
-                Console.WriteLine("The average word length is {0} characters.", averageLength);
-            }
-
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Average to get the average price of each category's products.")]
-            public void Linq91()
-            {
-                List<Product> products = GetProductList();
-
-                var categories =
-                    from prod in products
-                    group prod by prod.Category into prodGroup
-                    select new { Category = prodGroup.Key, AveragePrice = prodGroup.Average(p => p.UnitPrice) };
-
-                ObjectDumper.Write(categories);
-            }
-
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Aggregate to create a running product on the array that " +
-                         "calculates the total product of all elements.")]
-            public void Linq92()
-            {
-                double[] doubles = { 1.7, 2.3, 1.9, 4.1, 2.9 };
-
-                double product = doubles.Aggregate((runningProduct, nextFactor) => runningProduct * nextFactor);
-
-                Console.WriteLine("Total product of all numbers: {0}", product);
-            }
-
-            [Category("Aggregate Operators")]
-            [Description("This sample uses Aggregate to create a running account balance that " +
-                         "subtracts each withdrawal from the initial balance of 100, as long as " +
-                         "the balance never drops below 0.")]
-            public void Linq93()
-            {
-                double startBalance = 100.0;
-
-                int[] attemptedWithdrawals = { 20, 10, 40, 50, 10, 70, 30 };
-
-                double endBalance =
-                    attemptedWithdrawals.Aggregate(startBalance,
-                        (balance, nextWithdrawal) =>
-                            ((nextWithdrawal <= balance) ? (balance - nextWithdrawal) : balance));
-
-                Console.WriteLine("Ending balance: {0}", endBalance);
+                Console.WriteLine("First letters from Product names, but not from Customer names:");
+                foreach (var ch in productOnlyFirstChars)
+                {
+                    Console.WriteLine(ch);
+                }
             }
 
             public List<Product> GetProductList()
@@ -444,7 +333,7 @@ namespace AggregateOperators
 
                 // Customer/Order data read into memory from XML file using XLinq:
                 customerList = (
-                    from e in XDocument.Load(System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("AggregateOperators.customers.xml")).
+                    from e in XDocument.Load(System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("SetOperators.customers.xml")).
                               Root.Elements("customer")
                     select new Customer
                     {

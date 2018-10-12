@@ -18,15 +18,30 @@ changing them as little as possible to make them work.
 
 ## Changes
 
-The `.cs` files are the original files from the MSDN site. The changes can be found
-in those files by looking for the `--- CHANGE ---` marker in comments.
+Some minor changes were necessary to make the code samples work with .NET Core and
+Visual Studio Code.
 
-All the `.csproj` files have been generated from scratch with the `dotnet` CLI.
+Most of the changes were done using the script `convert-samples.ps1`, a primitive
+PowerShell script to do the heavy lifting.
 
-Here is a high-level summary of changes to the `.cs` files:
+The `.cs` files are the original files from the MSDN site. Changes made:
 
-* the `customers.xml` file is embedded into each project as an `EmbeddedResource`;
-* all sample methods are executed rather than just some of them.
+* uncomment all samples (done manually);
+* read `customers.xml` as an `EmbeddedResource` (done via `convert-samples.ps1`).
+
+All the `.csproj` files have been generated from scratch with the `dotnet` CLI by
+the `convert-samples.ps1` script. Changes made from the bare-bones `.csproj` files
+when needed:
+
+* add reference to `customers.xml` (done via script);
+* add reference to the `ObjectDumper` project (manually);
+* add reference to `System.Data.DataSetExtensions` (manually).
+
+A separate project was created for the `ObjectDumper` library.
+
+The manual changes could have been automated into the `convert-samples.ps1` script,
+but at that point it was just simpler to do the changes manually rather than
+change and test the script again.
 
 ## How to run the examples
 

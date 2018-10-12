@@ -4,7 +4,7 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
     <EmbeddedResource Include="../Common/customers.xml" />
-    <ProjectReference Include="..\Common\ObjectDumper\ObjectDumper.csproj" />
   </ItemGroup>
 </Project>

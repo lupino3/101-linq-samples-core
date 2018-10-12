@@ -1,14 +1,55 @@
 {
-	"folders": [
-		{
-			"path": "GroupingOperators"
-		},
-		{
-			"path": "AggregateOperators"
-		},
-		{
-			"path": "Common"
-		}
-	],
-	"settings": {}
+    "folders":  [
+                    {
+                        "path":  "GroupingOperators"
+                    },
+                    {
+                        "path":  "AggregateOperators"
+                    },
+                    {
+                        "path":  "Common"
+                    },
+                    {
+                        "path":  "RestrictionOperators"
+                    },
+                    {
+                        "path":  "ConversionOperators"
+                    },
+                    {
+                        "path":  "CustomSequenceOperators"
+                    },
+                    {
+                        "path":  "ElementOperators"
+                    },
+                    {
+                        "path":  "GenerationOperators"
+                    },
+                    {
+                        "path":  "JoinOperators"
+                    },
+                    {
+                        "path":  "MiscellaneousOperators"
+                    },
+                    {
+                        "path":  "OrderingOperators"
+                    },
+                    {
+                        "path":  "PartitioningOperators"
+                    },
+                    {
+                        "path":  "ProjectionOperators"
+                    },
+                    {
+                        "path":  "Quantifiers"
+                    },
+                    {
+                        "path":  "QueryExecution"
+                    },
+                    {
+                        "path":  "SetOperators"
+                    }
+                ],
+    "settings":  {
+
+                 }
 }
