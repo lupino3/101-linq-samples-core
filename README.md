@@ -16,7 +16,7 @@ package them in a repo that makes it easy to run them.
 samples to make sure they work under .NET Core and Visual Studio Code and
 changing them as little as possible to make them work.
 
-# Changes
+## Changes
 
 The `.cs` files are the original files from the MSDN site. The changes can be found
 in those files by looking for the `--- CHANGE ---` marker in comments.
@@ -25,15 +25,15 @@ All the `.csproj` files have been generated from scratch with the `dotnet` CLI.
 
 Here is a high-level summary of changes to the `.cs` files:
 
-  * the `customers.xml` file is embedded into each project as an `EmbeddedResource`;
-  * all sample methods are executed rather than just some of them.
+* the `customers.xml` file is embedded into each project as an `EmbeddedResource`;
+* all sample methods are executed rather than just some of them.
 
-# How to run the examples
+## How to run the examples
 
 TODO: add instructions to execute each example for each platform (Windows,
 Linux).
 
-# Visual Studio Code
+## Visual Studio Code
 
 With VSCode, having the .NET Core SDK and the C# extension installed, open
 the workspace file `samples.code-workspace`. It contains all projects, and
