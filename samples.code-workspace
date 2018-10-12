@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "GroupingOperators"
+		},
+		{
+			"path": "AggregateOperators"
+		},
+		{
+			"path": "Common"
+		}
+	],
+	"settings": {}
+}

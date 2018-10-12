@@ -32,3 +32,11 @@ Here is a high-level summary of changes to the `.cs` files:
 
 TODO: add instructions to execute each example for each platform (Windows,
 Linux).
+
+# Visual Studio Code
+
+With VSCode, having the .NET Core SDK and the C# extension installed, open
+the workspace file `samples.code-workspace`. It contains all projects, and
+will allow you to open all files from VSCode and run every project from
+the IDE itself, as opposed to opening the directory but not being able to
+automatically launch each separate example.
